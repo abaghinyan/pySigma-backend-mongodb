@@ -196,6 +196,11 @@ class MongoDBBackend(TextQueryBackend):
         escaped_text = text.translate(translation_table)
         
         return escaped_text
+    
+    def escape_special_characters_re(self, text):
+        text = text.replace('\\', '\\\\')
+        
+        return text
 
     def convert_condition_field_eq_value_regex(self, cond: ConditionFieldEqualsValueExpression, state: ConversionState) -> dict:
         field = self.convert_field_name(cond.field)
@@ -224,7 +229,7 @@ class MongoDBBackend(TextQueryBackend):
             else:
                 return self.eq_token.format(field=self.convert_field_name(cond.field), value=self.escape_special_characters(cond.value.to_plain()))
         elif isinstance(cond, ConditionFieldEqualsValueExpression) and hasattr(cond.value, "sigma_to_re_flag"):
-            return self.wildcard_match_expression.format(field=self.convert_field_name(cond.field), value=self.escape_special_characters(cond.value.to_plain(), True))
+            return self.wildcard_match_expression.format(field=self.convert_field_name(cond.field), value=self.escape_special_characters_re(cond.value.to_plain()))
         elif not hasattr(cond, 'field'):
             return self.convert_condition_field_eq_value_keyword(cond, state)
         elif isinstance(cond.value, list):
